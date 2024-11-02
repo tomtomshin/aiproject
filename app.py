@@ -64,9 +64,9 @@ def communicate():
     messages.append(user_message)
 
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=messages
-    )
+    model="gpt-3.5-turbo",  # 使用しているモデルを指定
+    messages=[{"role": "user", "content": "Hello, world!"}]
+)
 
     bot_message = response["choices"][0]["message"]
     messages.append(bot_message)
