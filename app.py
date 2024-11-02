@@ -1,7 +1,8 @@
-import streamlit as st
 import openai
+import streamlit as st
 
-openai.api_key = st.secrets.OpenAIAPI.openai_api_key
+# APIキーの設定
+openai.api_key = st.secrets["OpenAIAPI"]["openai_api_key"]
 
 system_prompt = """
 このスレッドでは以下ルールを厳格に守ってください。
@@ -53,9 +54,6 @@ if "messages" not in st.session_state:
         {"role": "system", "content": system_prompt}
     ]
 
-if "user_input" not in st.session_state:
-    st.session_state["user_input"] = ""
-
 # チャットボットとやりとりする関数
 def communicate():
     messages = st.session_state["messages"]
@@ -63,13 +61,15 @@ def communicate():
     user_message = {"role": "user", "content": st.session_state["user_input"]}
     messages.append(user_message)
 
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=messages
-    )
-
-    bot_message = response["choices"][0]["message"]
-    messages.append(bot_message)
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # または "gpt-4" モデル
+            messages=messages
+        )
+        bot_message = response["choices"][0]["message"]
+        messages.append(bot_message)
+    except openai.error.OpenAIError as e:
+        st.error(f"An error occurred: {str(e)}")
 
     st.session_state["user_input"] = ""  # 入力欄を消去
 
@@ -78,15 +78,13 @@ st.title("DX度診断")
 st.image("05_rpg.png")
 st.write("DXの評価です")
 
-user_input = st.text_input("ニックネームを入力してください。回答には時間がかかる場合があります", key="user_input", on_change=communicate)
+# ユーザー入力欄
+st.text_input("ニックネームを入力してください。回答には時間がかかる場合があります", 
+              key="user_input", on_change=communicate)
 
+# メッセージ表示
 if st.session_state["messages"]:
-    messages = st.session_state["messages"]
-
-    for message in reversed(messages[1:]):  # 直近のメッセージを上に
-        speaker = "🙂"
-        if message["role"] == "assistant":
-            speaker = "🤖"
-
-        st.write(speaker + ": " + message["content"])
+    for message in st.session_state["messages"][1:]:
+        speaker = "🙂" if message["role"] == "user" else "🤖"
+        st.write(f"{speaker}: {message['content']}")
 
