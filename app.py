@@ -89,3 +89,4 @@ if st.session_state["messages"]:
             speaker = "🤖"
 
         st.write(speaker + ": " + message["content"])
+
